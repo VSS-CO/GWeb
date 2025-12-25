@@ -1,0 +1,92 @@
+package main
+
+import (
+	"fmt"
+	"os"
+	"time"
+
+	"co.vss.gweb/core"
+
+	"github.com/fatih/color"
+	"github.com/muesli/termenv"
+)
+
+// Spinner animation
+func spinner(duration time.Duration, msg string) {
+	chars := []rune{'|', '/', '-', '\\'}
+	end := time.Now().Add(duration)
+	i := 0
+	for time.Now().Before(end) {
+		fmt.Printf("\r%s %c", msg, chars[i%len(chars)])
+		time.Sleep(100 * time.Millisecond)
+		i++
+	}
+	fmt.Print("\r")
+}
+
+// Simple ASCII mascot
+func showMascot() {
+	fmt.Println(`
+      (\_._/)      
+      ( o o )  GWeb
+     c("===")o
+`)
+}
+
+// Gradient banner
+func gradientBanner(text string) string {
+	profile := termenv.ColorProfile()
+	colored := ""
+	for i, r := range text {
+		c := (202 + i*2) % 255
+		colored += termenv.String(string(r)).
+			Foreground(profile.Color(fmt.Sprintf("#%02x%02x%02x", c, 200, 255))).
+			Styled(string(r)) // pass the string to Styled()
+	}
+	return colored
+}
+
+func main() {
+	if len(os.Args) < 2 {
+		color.Yellow("Usage: gweb dev")
+		return
+	}
+
+	switch os.Args[1] {
+	case "dev":
+		// Gradient ASCII banner
+		fmt.Println(gradientBanner("███████╗██╗    ██╗███████╗ ██████╗"))
+		fmt.Println(gradientBanner("██╔════╝██║    ██║██╔════╝██╔═══██╗"))
+		fmt.Println(gradientBanner("█████╗  ██║ █╗ ██║█████╗  ██║   ██║"))
+		fmt.Println(gradientBanner("██╔══╝  ██║███╗██║██╔══╝  ██║   ██║"))
+		fmt.Println(gradientBanner("███████╗╚███╔███╔╝███████╗╚██████╔╝"))
+		fmt.Println(gradientBanner("╚══════╝ ╚══╝╚══╝ ╚══════╝ ╚═════╝ "))
+
+		showMascot()
+
+		color.Green("🚀 Starting GWeb dev server with HMR...")
+
+		// Spinner while initializing
+		spinner(2*time.Second, "Initializing server")
+
+		// Ensure HMRChannel exists
+		if core.HMRChannel == nil {
+			core.HMRChannel = make(chan string)
+		}
+
+		// Start server
+		go core.StartServer()
+
+		// Listen for HMR messages
+		go func() {
+			for msg := range core.HMRChannel {
+				color.Cyan("[HMR] %s", msg)
+			}
+		}()
+
+		// Keep main alive
+		select {}
+	default:
+		color.Red("Unknown command: %s", os.Args[1])
+	}
+}
