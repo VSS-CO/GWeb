@@ -1,0 +1,12 @@
+{
+  "name": "gweb",
+  "version": "1.0.0",
+  "description": "A GoLang web framework",
+  "license": "MIT",
+  "author": "VSS.CO",
+  "type": "commonjs",
+  "main": "cmd/gweb/main.go",
+  "scripts": {
+    "dev": "./gweb.exe dev"
+  }
+}
